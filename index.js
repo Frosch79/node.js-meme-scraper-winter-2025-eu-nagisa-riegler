@@ -1,26 +1,31 @@
 import fs from 'node:fs';
-import axios from 'axios';
 import { JSDOM } from 'jsdom';
+import fetch from 'node-fetch';
 
-let dom;
 const url = 'https://memegen-link-examples-upleveled.netlify.app/';
-let memes = [];
+let dom;
+const path = './memes';
 
 // Fetch URL
-await axios
-  .get(url)
-  .then((fetching) => {
-    // Get HTML data
-    dom = new JSDOM(fetching.data);
+await fetch(url)
+  .then((data) => data.text())
+  .then((response) => {
+    dom = new JSDOM(response);
+
+    // Make new directory
+    if (!fs.existsSync(path)) {
+      fs.mkdirSync(path, { recursive: true });
+    }
   })
-  .catch(() => console.error('error'));
+  .catch((error) => console.error(error));
+
+// Search image tag from html text
 const img = dom.window.document.querySelectorAll('img');
 
-// Save images to memes folder
-for (let i = 0; i < 10; i++) {
-  memes.push(img[i].getAttribute('src'));
+// Get image binary and assign to created directory
 
-  const res = await fetch(memes[i]);
+for (let i = 0; i < 10; i++) {
+  const res = await fetch(img[i].getAttribute('src'));
   const arrayBuffer = await res.arrayBuffer();
   const buffer = Buffer.from(arrayBuffer);
   const num = i + 1;
